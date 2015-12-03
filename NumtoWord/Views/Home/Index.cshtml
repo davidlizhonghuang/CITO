@@ -1,0 +1,230 @@
+﻿@{
+    Layout = null;
+}
+@model NumtoWord.Models.NumToWord
+<html>
+
+<head>
+    <script src="~/Scripts/jquery-1.10.2.min.js"></script>
+   
+     <link href="~/Content/bootstrap.min.css" rel="stylesheet" />
+
+<title>Test for 3P learning</title>
+    <style>
+        html{
+            background-color: #d3f7e7;
+            font-family: Arial;
+            font-size: medium;
+            margin: 40px;
+            border-radius: 20px;
+        }
+        form{
+            border-radius: 30px;
+        }
+
+        .dv1{background-color: #e9e1e1; margin:10px; height: 30%;}
+
+        .dv2{background-color: #ffd800; margin:10px; height:50%;}
+    </style>
+</head>
+
+<body >
+    @using (Html.BeginForm())
+    {
+     Html.EnableClientValidation();
+  
+    <div class="col-md-4">
+   
+      <h3>Technical specification</h3>
+        <div class="dv1">
+
+            <h4>1, Convert Cheque Number To Word</h4>
+
+            <ul class="nav-tabs">
+                <li>create a new MVC project</li>
+                <li>add input box for number and one span to display the result</li>
+                <li>add a button to do Ajax call.</li>
+                <li>based on the bank practice, Cheque number will be 15 digits long.</li>
+            </ul>
+
+        </div>
+
+        <br /><br />
+        <div class="dv2">
+            <h4>2, CRUD Operations</h4>
+
+            <ul class="nav-tabs">
+                <li>1, add a sql database to app_data folder, get connectio string</li>
+                <li>2, add a EDMX file , link to sql database , add a table we need in CRUD</li>
+                <li>3, add repository class, get its interfacce and add them to UnityConfig.cs</li>
+                <li>4, add service class, get its interfacce and add them to UnityConfig.cs</li>
+                <li>5, inject this service interfacce to home controller</li>
+                <li>6, create "add" and "getall" actions, use ajax call in view to insert and show the data.</li>
+            </ul>
+        </div>
+       
+    </div>
+    
+    <div class="col-md-4">
+
+        <h3>1, Convert Cheque Number To Word</h3>
+
+        <table style="width: auto; margin: 20px;">
+            <tr><td>Number</td>
+                <td>
+                    @Html.EditorFor(model => model.number, new { maxlength=15 })
+                    @Html.ValidationMessageFor(model => model.number, "", new { @class = "text-danger" })
+                    @Html.HiddenFor(model => model.asword, new { htmlAttributes = new { @class = "form-control" } })
+                </td><td><input type="submit" value="Convert To" class="btn btn-default" onclick="return getwords();" style="float: right" />
+                </td>
+            </tr>
+            
+            <tr><td>Words</td>
+                <td colspan="2">
+                    <span id="strresult" style="font-weight: 400; color: red; font-size: x-large;">@ViewBag.result</span>
+                </td>
+            </tr>
+
+        </table>
+
+    </div>
+
+   <div class="col-md-4">
+       <h3>2, CRUD Operations</h3>
+
+       <div style="margin: 20px;">
+           <b>1, Get All Items</b>
+           <input type="button" onclick="getalldata()" id="clbtn" value="Get All" />
+           <div id="result"></div>
+       </div>
+
+       <div style="margin: 20px;">
+           <b>2, Add a New Item</b>
+           <input type="button" value="Open" onclick="openwin()" />
+     <br />
+             <b><i>notes:</i> </b>
+           <ul>
+               <li>click open button to open a popup window</li>
+               <li>enter number and word and click create button to create a record</li>
+               <li>after popup window isappears, click getall button to list the record</li>
+           </ul>
+       </div>
+
+
+   </div>
+
+    }
+
+
+    <script>
+        function openwin()
+        {
+            window.open("/Home/Addone", "_new", "width: 500px; height: 300px;", false);
+        }
+
+        function notowd(Id, number, asword) {
+            this.Id = Id,
+            this.number = number,
+            this.asword = asword
+        }
+
+
+
+        function getalldata() {
+
+        $.ajax({
+            type: 'GET',
+            url: '@Url.Action("GetAllData", "Home")',
+            success: function (data) {
+
+                var datatable = "<table style='margin:20px; background-color: whitesmoke'>";
+
+                $.each(data, function (index, element) {
+
+                    datatable += "<tr><td>ID</td><td>" + element.Id + "</td></tr>" +
+                     "<tr><td>Number</td><td>" + element.number + "</td></tr>"+
+                    "<tr><td>As Word</td><td>" + element.asword + "</td></tr>"
+
+                });
+
+                datatable +=  "</table>";
+
+
+
+                $("#result").empty();
+                $("#result").append(datatable);
+                $("#result").focus();
+
+            },
+            error: function (data, status, error) {
+                $("#strresult").empty();
+                $("#strresult").append(error);
+                $("#strresult").focus();
+            }
+        });
+
+    }
+
+   
+   
+
+
+    function getwords()
+    {
+        var allow = true;
+
+        var dataclass = new notowd();
+
+        dataclass.number = $('#number').val();
+
+        console.log($('#number').val());
+
+        if ($('#number').val() == "")
+        {
+
+            $("#strresult").empty();
+            $("#strresult").append("please enter a cheque number first ");
+            $("#strresult").focus();
+
+            allow = false;
+            return false;
+        }
+     
+       if (!Number($('#number').val())) {
+
+            $("#strresult").empty();
+            $("#strresult").append("please enter a valid cheque number first ");
+            $("#strresult").focus();
+
+            allow = false;
+            return false;
+        }
+
+
+        if( allow )
+        {
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("Index","Home")',
+                data: { NumToWord: dataclass },
+                success: function (data) {
+                    $("#strresult").empty();
+                    $("#strresult").append(data);
+                    $("#strresult").focus();
+                },
+                error: function (data, status, error) {
+                    $("#strresult").empty();
+                    $("#strresult").append(error);
+                    $("#strresult").focus();
+                }
+            });
+
+            return true;
+        }
+
+
+    }
+    </script>
+
+</body>
+</html>
